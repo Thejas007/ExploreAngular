@@ -1,0 +1,86 @@
+<html>
+<head>
+ <title>AngularJS Service Factory and Providers</title>
+ <script src="angular.js"></script>
+</head>
+<body>
+ <div class="container" style="padding-top:20px;">
+ <div ng-app="myApp" ng-controller="myController" ng-strict-di>
+ <p>From Service: {{serviceName}}</p>
+ <p>From Factory: {{factoryName}}</p>
+ <p>From Provider: {{providerName}}</p>
+ </div>
+     <div id="myApp2" ng-app="myApp2" ng-controller="myController2">
+         <p>From Service: {{name}}</p>
+     </div>
+ </div>
+ <script>
+ //defining module
+ var app = angular.module('myApp',[]);
+ var app2 = angular.module('myApp2', []);
+
+ //defining service
+ app.service('myService', function () {
+ this.name = '';
+ this.setName = function (newName) {
+ this.name = newName;
+ return this.name;
+ };
+ });
+ 
+ //defining factory
+ app.factory('myFactory', function () {
+ var serviceObj = {};
+ serviceObj.name = '';
+ serviceObj.setName = function (newName) {
+ serviceObj.name = newName;
+ };
+ return serviceObj;
+ });
+ var configurable=function () {
+     var privateName = '';
+     this.setName = function (newName) {
+         privateName = newName;
+     };
+     var t=function () {
+         return {
+             name: privateName
+         };
+     };
+     t.$inject = [];
+     this.$get = t;
+ };
+ configurable.$inject = [];
+ //defining provider
+ app.provider('configurable', configurable);
+ var configure = function (configurableProvider, $compileProvider) {
+     configurableProvider.setName("Thejas");
+     $compileProvider.debugInfoEnabled(true);
+ };
+ configure.$inject = ['configurableProvider', '$compileProvider'];
+ //configuring provider
+ app.config(configure);
+ var myController = function ($scope, myService, myFactory, configurable) {
+     $scope.serviceName = myService.setName("Thejas");
+
+     myFactory.setName("Thejas");
+     $scope.factoryName = myFactory.name;
+
+     $scope.providerName = configurable.name;
+ }
+ myController.$inject = ['$scope', 'myService', 'myFactory', 'configurable'];
+ //defining controller
+ app.controller('myController', myController);
+ 
+ var myController2 = function ($scope) {
+     $scope.name = "Thejas";
+
+
+ }
+ myController2.$inject = ['$scope'];
+ app2.controller('myController2', myController2);
+ 
+ angular.bootstrap(document.getElementById("myApp2"), ["myApp2"]);
+ </script>
+</body>
+</html>
